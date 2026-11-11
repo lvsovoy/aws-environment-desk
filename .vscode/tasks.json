@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run app (dev)",
+      "detail": "Tauri dev mode with frontend watch and hot reload (npm.cmd start)",
+      "type": "process",
+      "command": "npm.cmd",
+      "args": ["start"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": {
+        "owner": "tauri-dev",
+        "pattern": { "regexp": "^error(\\[\\w+\\])?: (.*)$", "message": 2 },
+        "background": {
+          "beginsPattern": "^\\s*(Running BeforeDevCommand|Compiling)",
+          "endsPattern": "^\\s*Running `"
+        }
+      }
+    }
+  ]
+}

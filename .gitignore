@@ -1,0 +1,12 @@
+node_modules/
+dist/
+test-results/
+release/
+dist-tauri/
+src-tauri/target/
+src-tauri/gen/
+ci-release/
+config/config.json
+config/apps.json
+config/default.json
+config/app-config.json

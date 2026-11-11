@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "name": "AWS Environment Desk",
+  "productName": "AWS Environment Desk",
+  "description": "AWS Environment resources and AWS VPN profile switching",
+  "identifier": "com.aws.environmentdesk",
+  "brand": {
+    "name": "AWS Environment Desk",
+    "markAlt": "AWS Environment Desk",
+    "backgroundColor": "#202522",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\" width=\"1024\" height=\"1024\"><defs><linearGradient id=\"deskGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#10b981\"/><stop offset=\"100%\" stop-color=\"#059669\"/></linearGradient></defs><rect x=\"128\" y=\"128\" width=\"768\" height=\"512\" rx=\"64\" fill=\"url(#deskGrad)\"/><rect x=\"200\" y=\"200\" width=\"624\" height=\"368\" rx=\"32\" fill=\"#1e293b\"/><circle cx=\"512\" cy=\"384\" r=\"96\" fill=\"#38bdf8\" fill-opacity=\"0.2\"/><path d=\"M448 384 L496 432 L576 336\" fill=\"none\" stroke=\"#38bdf8\" stroke-width=\"32\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M384 768 L640 768 M512 640 L512 768\" stroke=\"#10b981\" stroke-width=\"48\" stroke-linecap=\"round\"/></svg>"
+  },
+  "vpn": {
+    "clientName": "AWS VPN Client 6.2",
+    "defaultProfiles": {
+      "dev": "Stockholm DEV",
+      "int": "Stockholm DEV",
+      "stage": "Stockholm STAGE",
+      "prod": "Stockholm PROD"
+    }
+  },
+  "environments": [
+    { "key": "dev", "title": "DEV", "sub": "DEV VPN", "color": "#10b981" },
+    { "key": "int", "title": "INT", "sub": "DEV VPN", "color": "#06b6d4" },
+    { "key": "stage", "title": "STAGE", "sub": "STAGE VPN", "color": "#f59e0b" },
+    { "key": "prod", "title": "PROD", "sub": "PROD VPN", "color": "#ef4444" }
+  ],
+  "apps": [
+    {
+      "key": "aws",
+      "name": "AWS Console",
+      "description": "AWS Management Console",
+      "icon": "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/aws.png",
+      "links": {
+        "dev": "https://aws.amazon.com/console/",
+        "int": "https://aws.amazon.com/console/",
+        "stage": "https://aws.amazon.com/console/",
+        "prod": "https://aws.amazon.com/console/"
+      }
+    },
+    {
+      "key": "gitlab",
+      "name": "GitLab",
+      "description": "Source Code & CI/CD",
+      "icon": "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/gitlab.png",
+      "links": {
+        "dev": "https://gitlab.com/",
+        "int": "https://gitlab.com/",
+        "stage": "https://gitlab.com/",
+        "prod": "https://gitlab.com/"
+      }
+    }
+  ]
+}

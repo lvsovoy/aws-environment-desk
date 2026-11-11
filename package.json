@@ -1,0 +1,32 @@
+{
+  "name": "aws-environment-desk",
+  "version": "1.0.0",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "type": "module",
+  "description": "AWS Environment resources and AWS VPN profile switching",
+  "scripts": {
+    "start": "node desktop/tauri.js dev",
+    "build": "node desktop/build-tauri.js",
+    "test": "node --test",
+    "build:tauri": "node desktop/build-tauri.js",
+    "config:import": "node desktop/import-config.js",
+    "dev:frontend": "node desktop/build-tauri.js --watch",
+    "tauri:dev": "node desktop/tauri.js dev",
+    "tauri:build": "node desktop/tauri.js build",
+    "test:tauri": "npm run build:tauri && node desktop/tauri.js test",
+    "test:tauri:desktop": "npm run build:tauri && node desktop/tauri.js smoke",
+    "publish:tauri": "node desktop/publish-tauri.js"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/cli": "2.12.4",
+    "esbuild": "0.28.2",
+    "lucide": "1.61.0",
+    "png2icons": "2.0.1",
+    "sharp": "0.35.5"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Only the bundled main window may use application commands. No shell, filesystem, or opener commands are exposed.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}
