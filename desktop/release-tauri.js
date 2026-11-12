@@ -67,6 +67,13 @@ export async function release(platform, {
   if ((await stat(publicFile)).size > 65_536) throw new Error('Public key exceeds 64 KiB.');
   const publicKey = (await readFile(publicFile, 'utf8')).trim();
   if (!publicKey) throw new Error('The public verification key is empty.');
+  const rawKey = (await readFile(key, 'utf8')).trim();
+  if (!rawKey) throw new Error('The private signing key is empty.');
+  try {
+    await writeFile(key, rawKey, 'utf8');
+  } catch (error) {
+    if (error.code !== 'EACCES' && error.code !== 'EPERM') throw error;
+  }
   const cache = windows ? environment.LOCALAPPDATA : join(homedir(), 'Library', 'Caches');
   if (!cache && !environment.CARGO_TARGET_DIR) throw new Error('LOCALAPPDATA is required for build output.');
   const target = environment.CARGO_TARGET_DIR || join(cache, 'STPEnvironmentDesk', 'build');
@@ -88,13 +95,6 @@ export async function release(platform, {
   }
   let staging;
   try {
-    staging = await mkdtemp(join(tmpdir(), 'stp-release-check-'));
-    // Fail on a missing password or unusable private key before modifying source versions.
-    const probe = join(staging, 'signing-check.txt');
-    await writeFile(probe, 'STP release signing preflight\n');
-    const options = { cwd: root, env };
-    const cli = join(root, 'node_modules', '@tauri-apps', 'cli', 'tauri.js');
-    await run(process.execPath, [cli, 'signer', 'sign', '-f', key, probe], options);
     const configPath = join(root, 'src-tauri', 'tauri.conf.json');
     const cargoPath = join(root, 'src-tauri', 'Cargo.toml');
     const lockPath = join(root, 'src-tauri', 'Cargo.lock');
@@ -121,6 +121,15 @@ export async function release(platform, {
     }
     const lockSection = /(\[\[package\]\]\r?\nname = "(?:stp-environment-desk|aws-environment-desk)"\r?\nversion = ")([^"]+)(")/;
     if (cargoLock.match(lockSection)?.[2] !== config.version) throw new Error('Cargo.lock source version must match Tauri.');
+
+    staging = await mkdtemp(join(tmpdir(), 'stp-release-check-'));
+    // Fail on a missing password or unusable private key before modifying source versions.
+    const probe = join(staging, 'signing-check.txt');
+    await writeFile(probe, 'STP release signing preflight\n');
+    const options = { cwd: root, env };
+    const cli = join(root, 'node_modules', '@tauri-apps', 'cli', 'tauri.js');
+    await run(process.execPath, [cli, 'signer', 'sign', '--app-version', version, '-f', key, probe], options);
+
     const updatedConfig = configText.replace(/("version"\s*:\s*")[^"]+(")/, (_, prefix, suffix) => `${prefix}${version}${suffix}`);
     await writeFile(configPath, updatedConfig);
     await writeFile(cargoPath, cargo.replace(packageSection, (_, prefix, old, suffix) => `${prefix}${version}${suffix}`));

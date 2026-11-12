@@ -542,6 +542,8 @@ mod tests {
         fs::write(&metadata, &original).unwrap();
         signer(&[
             "sign",
+            "--app-version",
+            "9.9.9",
             "-f",
             key.to_str().unwrap(),
             metadata.to_str().unwrap(),

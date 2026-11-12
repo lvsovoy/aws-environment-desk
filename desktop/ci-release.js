@@ -38,10 +38,10 @@ async function main() {
   if (!keyPath && process.env.TAURI_SIGNING_PRIVATE_KEY) {
     tempKeyDir = await mkdtemp(join(tmpdir(), 'ci-key-'));
     keyPath = join(tempKeyDir, 'release.key');
-    await writeFile(keyPath, process.env.TAURI_SIGNING_PRIVATE_KEY.trim() + '\n', 'utf8');
+    await writeFile(keyPath, process.env.TAURI_SIGNING_PRIVATE_KEY.trim(), 'utf8');
     if (process.env.TAURI_PUBLIC_KEY) {
       pubPath = join(tempKeyDir, 'release.key.pub');
-      await writeFile(pubPath, process.env.TAURI_PUBLIC_KEY.trim() + '\n', 'utf8');
+      await writeFile(pubPath, process.env.TAURI_PUBLIC_KEY.trim(), 'utf8');
     }
   }
 

@@ -187,7 +187,10 @@ test('release pipeline publishes real signed metadata with isolated fixture inst
   assert.deepEqual(Object.keys(metadata.platforms), ['windows-x86_64']);
   const artifact = metadata.platforms['windows-x86_64'];
   assert.equal((await stat(join(result.channel, artifact.file))).size, artifact.size);
-  assert.ok((await stat(join(result.channel, 'latest.json.sig'))).size > 0);
+  const sigRaw = await readFile(join(result.channel, 'latest.json.sig'), 'utf8');
+  assert.ok(sigRaw.length > 0);
+  const sigText = sigRaw.startsWith('untrusted comment:') ? sigRaw : Buffer.from(sigRaw.trim(), 'base64').toString('utf8');
+  assert.match(sigText, /version:1\.1\.1/);
 });
 
 /** Publisher handles secrets with trailing newlines or coexisting environment variables cleanly. */
@@ -212,5 +215,8 @@ test('publisher signs correctly when private key secret contains newlines or whi
   delete env.TAURI_SIGNING_PRIVATE_KEY_PATH;
   const result = spawnSync(process.execPath, [publisher, '1.0.0', destDir, 'windows-x86_64', installerPath], { env });
   assert.equal(result.status, 0, result.stderr?.toString());
-  assert.ok((await stat(join(destDir, 'latest.json.sig'))).size > 0);
+  const sigRaw = await readFile(join(destDir, 'latest.json.sig'), 'utf8');
+  assert.ok(sigRaw.length > 0);
+  const sigText = sigRaw.startsWith('untrusted comment:') ? sigRaw : Buffer.from(sigRaw.trim(), 'base64').toString('utf8');
+  assert.match(sigText, /version:1\.0\.0/);
 });

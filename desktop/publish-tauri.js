@@ -70,9 +70,16 @@ async function publish() {
     const metadata = join(staging, 'latest.json');
     await writeFile(metadata, `${JSON.stringify(manifest, null, 2)}\n`);
     const cli = fileURLToPath(new URL('../node_modules/@tauri-apps/cli/tauri.js', import.meta.url));
-    const signerArgs = [cli, 'signer', 'sign'];
+    const signerArgs = [cli, 'signer', 'sign', '--app-version', version];
     const signerEnv = { ...process.env };
     if (process.env.TAURI_SIGNING_PRIVATE_KEY_PATH) {
+      try {
+        const keyFile = process.env.TAURI_SIGNING_PRIVATE_KEY_PATH;
+        const keyData = (await readFile(keyFile, 'utf8')).trim();
+        await writeFile(keyFile, keyData, 'utf8');
+      } catch (err) {
+        if (err.code !== 'ENOENT' && err.code !== 'EACCES' && err.code !== 'EPERM') throw err;
+      }
       signerArgs.push('-f', process.env.TAURI_SIGNING_PRIVATE_KEY_PATH);
       delete signerEnv.TAURI_SIGNING_PRIVATE_KEY;
     } else if (process.env.TAURI_SIGNING_PRIVATE_KEY) {
