@@ -60,6 +60,7 @@ async function main() {
 
   try {
     run(['--test'], process.env);
+    run([join(root, 'desktop', 'build-tauri.js')], environment);
     run([join(root, 'desktop', 'tauri.js'), 'test', '--locked'], environment);
     await release(process.argv[2], { environment });
   } finally {
