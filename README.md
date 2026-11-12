@@ -82,11 +82,10 @@ Tauri uses Minisign key pairs to sign update manifests and verify in-app updates
    - **Public key** (`keys/release.key.pub`): Embedded into the application to verify release signatures.
 
 3. Provisioning keys:
-   - **GitHub Actions**: Add repository secrets:
-     - `TAURI_SIGNING_PRIVATE_KEY`: Content of the private key (`keys/release.key`).
-     - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: Password set during generation (leave empty if none).
-     - `TAURI_PUBLIC_KEY`: Content of the public key (`keys/release.key.pub`).
-   - **Local Builds / Publishing**: Set `TAURI_SIGNING_PRIVATE_KEY_PATH` to the absolute path of `keys/release.key` and export `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` in your environment.
+   Add repository secrets in GitHub Actions:
+   - `TAURI_SIGNING_PRIVATE_KEY`: Content of the private key (`keys/release.key`).
+   - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: Password set during generation (leave empty if none).
+   - `TAURI_PUBLIC_KEY`: Content of the public key (`keys/release.key.pub`).
 
 ### GitHub Actions CI/CD Releases
 
@@ -99,22 +98,3 @@ Automated releases are handled by GitHub Actions (`.github/workflows/release.yml
 | `TAURI_SIGNING_PRIVATE_KEY` | Minisign private key content for signing release manifests |
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Password for the signing key (if encrypted) |
 | `TAURI_PUBLIC_KEY` | Matching public key embedded in the app for update verification |
-
-### Local Builds
-
-To build signed standalone installers locally:
-
-- **Windows** (NSIS installer):
-  ```bash
-  npm run tauri:build -- --bundles nsis
-  ```
-
-- **macOS** (Universal DMG):
-  ```bash
-  npm run tauri:build -- --bundles dmg
-  ```
-
-For local release publishing scripts, ensure signing keys are provisioned in a secure directory and invoke:
-```bash
-npm run publish:tauri -- <version> <target-directory> <platform> <installer-path>
-```

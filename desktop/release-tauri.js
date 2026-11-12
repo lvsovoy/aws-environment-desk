@@ -94,7 +94,7 @@ export async function release(platform, {
     await writeFile(probe, 'STP release signing preflight\n');
     const options = { cwd: root, env };
     const cli = join(root, 'node_modules', '@tauri-apps', 'cli', 'tauri.js');
-    await run(process.execPath, [cli, 'signer', 'sign', probe], options);
+    await run(process.execPath, [cli, 'signer', 'sign', '-f', key, probe], options);
     const configPath = join(root, 'src-tauri', 'tauri.conf.json');
     const cargoPath = join(root, 'src-tauri', 'Cargo.toml');
     const lockPath = join(root, 'src-tauri', 'Cargo.lock');

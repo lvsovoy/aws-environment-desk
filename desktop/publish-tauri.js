@@ -70,7 +70,19 @@ async function publish() {
     const metadata = join(staging, 'latest.json');
     await writeFile(metadata, `${JSON.stringify(manifest, null, 2)}\n`);
     const cli = fileURLToPath(new URL('../node_modules/@tauri-apps/cli/tauri.js', import.meta.url));
-    const signed = spawnSync(process.execPath, [cli, 'signer', 'sign', metadata], { stdio: 'inherit' });
+    const signerArgs = [cli, 'signer', 'sign'];
+    const signerEnv = { ...process.env };
+    if (process.env.TAURI_SIGNING_PRIVATE_KEY_PATH) {
+      signerArgs.push('-f', process.env.TAURI_SIGNING_PRIVATE_KEY_PATH);
+      delete signerEnv.TAURI_SIGNING_PRIVATE_KEY;
+    } else if (process.env.TAURI_SIGNING_PRIVATE_KEY) {
+      const sanitizedKey = process.env.TAURI_SIGNING_PRIVATE_KEY.trim();
+      signerArgs.push('-k', sanitizedKey);
+      signerEnv.TAURI_SIGNING_PRIVATE_KEY = sanitizedKey;
+      delete signerEnv.TAURI_SIGNING_PRIVATE_KEY_PATH;
+    }
+    signerArgs.push(metadata);
+    const signed = spawnSync(process.execPath, signerArgs, { env: signerEnv, stdio: 'inherit' });
     if (signed.error) throw signed.error;
     if (signed.status !== 0) throw new Error(`Release signing failed with exit code ${signed.status}.`);
     await readFile(`${metadata}.sig`);

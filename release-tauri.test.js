@@ -189,3 +189,28 @@ test('release pipeline publishes real signed metadata with isolated fixture inst
   assert.equal((await stat(join(result.channel, artifact.file))).size, artifact.size);
   assert.ok((await stat(join(result.channel, 'latest.json.sig'))).size > 0);
 });
+
+/** Publisher handles secrets with trailing newlines or coexisting environment variables cleanly. */
+test('publisher signs correctly when private key secret contains newlines or whitespace', async context => {
+  const directory = await mkdtemp(join(tmpdir(), 'stp-pub-key-test-'));
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  const cli = fileURLToPath(new URL('./node_modules/@tauri-apps/cli/tauri.js', import.meta.url));
+  const publisher = fileURLToPath(new URL('./desktop/publish-tauri.js', import.meta.url));
+  const keyPath = join(directory, 'test.key');
+  const installerPath = join(directory, 'app.exe');
+  await writeFile(installerPath, 'installer contents');
+  const gen = spawnSync(process.execPath, [cli, 'signer', 'generate', '--ci', '--password', '', '-w', keyPath]);
+  assert.equal(gen.status, 0);
+  const rawKey = await readFile(keyPath, 'utf8');
+  const rawKeyWithWhitespace = `\r\n  ${rawKey.trim()}  \n\n`;
+  const destDir = join(directory, 'out');
+  const env = {
+    ...process.env,
+    TAURI_SIGNING_PRIVATE_KEY: rawKeyWithWhitespace,
+    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: '',
+  };
+  delete env.TAURI_SIGNING_PRIVATE_KEY_PATH;
+  const result = spawnSync(process.execPath, [publisher, '1.0.0', destDir, 'windows-x86_64', installerPath], { env });
+  assert.equal(result.status, 0, result.stderr?.toString());
+  assert.ok((await stat(join(destDir, 'latest.json.sig'))).size > 0);
+});

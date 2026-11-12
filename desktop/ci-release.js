@@ -57,6 +57,7 @@ async function main() {
     TAURI_SIGNING_PRIVATE_KEY_PATH: keyPath,
     ...(pubPath ? { DESK_UPDATE_PUBLIC_KEY_PATH: pubPath } : {}),
   };
+  delete environment.TAURI_SIGNING_PRIVATE_KEY;
 
   try {
     run(['--test'], process.env);

@@ -1,11 +1,17 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, existsSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const [command, ...args] = process.argv.slice(2);
+
+// Ensure frontend assets and icons are prepared before running cargo or tauri cli
+if (!existsSync(join(root, 'dist-tauri', 'index.html')) || !existsSync(join(root, 'dist', 'icons', 'tray.png'))) {
+  const result = spawnSync(process.execPath, [join(root, 'desktop', 'build-tauri.js')], { cwd: root, stdio: 'inherit' });
+  if (result.error) throw result.error;
+}
 const cache = process.platform === 'win32'
   ? process.env.LOCALAPPDATA
   : process.platform === 'darwin' ? join(homedir(), 'Library', 'Caches') : join(homedir(), '.cache');
