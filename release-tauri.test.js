@@ -158,6 +158,8 @@ test('release pipeline publishes real signed metadata with isolated fixture inst
   const cli = fileURLToPath(new URL('./node_modules/@tauri-apps/cli/tauri.js', import.meta.url));
   const publisher = fileURLToPath(new URL('./desktop/publish-tauri.js', import.meta.url));
   const environment = { ...process.env, ...data.environment, TAURI_SIGNING_PRIVATE_KEY_PASSWORD: '' };
+  delete environment.DESK_RELEASE_VERSION;
+  delete environment.DESK_UPDATE_PUBLIC_KEY_PATH;
   await rm(environment.TAURI_SIGNING_PRIVATE_KEY_PATH);
   await rm(`${environment.TAURI_SIGNING_PRIVATE_KEY_PATH}.pub`);
   /** Run only the installed signer/publisher and surface subprocess failures without secret output. */
