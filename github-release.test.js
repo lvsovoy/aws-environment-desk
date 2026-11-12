@@ -86,13 +86,32 @@ test('GitHub upload failures prevent successful release', async t => {
   }), /upload.*500/i);
 });
 
-/** Existing release tags are rejected. */
-test('GitHub publisher rejects existing releases and invalid tags', async t => {
+/** Existing GitHub Releases are supported and can receive uploaded or replaced assets. */
+test('GitHub publisher attaches assets to existing releases and handles invalid tags', async t => {
   const data = await fixture(t);
-  await assert.rejects(publishGitHub({
+  const deleted = [];
+  const assets = await publishGitHub({
     ...data,
-    request: async () => new Response('{"id": 1}', { status: 200 }),
-  }), /already exists/);
+    request: async (url, options = {}) => {
+      if (url.includes('/releases/tags/v1.2.3')) {
+        return new Response(JSON.stringify({
+          id: 456,
+          upload_url: 'https://uploads.github.com/repos/test-owner/test-repo/releases/456/assets{?name,label}',
+          assets: [{ id: 99, name: 'windows-latest.json' }],
+        }), { status: 200 });
+      }
+      if (options.method === 'DELETE' && url.includes('/releases/assets/99')) {
+        deleted.push(url);
+        return new Response(null, { status: 204 });
+      }
+      if (options.method === 'POST' && url.includes('/releases/456/assets')) {
+        return new Response(JSON.stringify({ browser_download_url: url }), { status: 201 });
+      }
+      return new Response('{}', { status: 200 });
+    },
+  });
+  assert.equal(assets.length, 6);
+  assert.equal(deleted.length, 1);
 
   await assert.rejects(publishGitHub({
     ...data,

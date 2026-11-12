@@ -93,38 +93,53 @@ export async function publishGitHub({
     },
   });
 
+  let releaseData;
   const existingResponse = await call(`${repoUrl}/releases/tags/${encodeURIComponent(tag)}`);
-  if (existingResponse.status !== 404) {
-    if (existingResponse.ok) throw new Error('This GitHub Release already exists; use a new version/tag.');
+  if (existingResponse.ok) {
+    releaseData = await existingResponse.json();
+  } else if (existingResponse.status === 404) {
+    const createResponse = await call(`${repoUrl}/releases`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tag_name: tag,
+        name: `Release ${tag}`,
+        body: `Automated release for ${tag}. Contains signed Windows and macOS installers.`,
+        draft: false,
+        prerelease: false,
+      }),
+    });
+
+    if (createResponse.status !== 201) {
+      throw new Error(`Cannot create GitHub Release: HTTP ${createResponse.status}.`);
+    }
+
+    releaseData = await createResponse.json();
+  } else {
     throw new Error(`Cannot inspect GitHub Release: HTTP ${existingResponse.status}.`);
   }
 
-  const createResponse = await call(`${repoUrl}/releases`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      tag_name: tag,
-      name: `Release ${tag}`,
-      body: `Automated release for ${tag}. Contains signed Windows and macOS installers.`,
-      draft: false,
-      prerelease: false,
-    }),
-  });
-
-  if (createResponse.status !== 201) {
-    throw new Error(`Cannot create GitHub Release: HTTP ${createResponse.status}.`);
-  }
-
-  const releaseData = await createResponse.json();
   const releaseId = releaseData.id;
   const uploadUrlTemplate = releaseData.upload_url || `${repoUrl}/releases/${releaseId}/assets{?name,label}`;
   const uploadBase = uploadUrlTemplate.split('{')[0];
 
+  const existingAssets = Array.isArray(releaseData.assets) ? releaseData.assets : [];
   const uploadedAssets = [];
   for (const file of files) {
     const assetName = file.filename.startsWith('latest.json')
       ? `${file.channel}-${file.filename}`
       : file.filename;
+
+    const matchedAsset = existingAssets.find(a => a.name === assetName);
+    if (matchedAsset) {
+      const deleteResponse = await call(`${repoUrl}/releases/assets/${matchedAsset.id}`, {
+        method: 'DELETE',
+      });
+      if (deleteResponse.status !== 204 && deleteResponse.status !== 404) {
+        throw new Error(`Cannot replace existing asset ${assetName}: HTTP ${deleteResponse.status}.`);
+      }
+    }
+
     const blob = await openAsBlob(file.path);
     const uploadUrl = `${uploadBase}?name=${encodeURIComponent(assetName)}`;
     const uploadResponse = await call(uploadUrl, {
