@@ -103,7 +103,7 @@ export async function release(platform, {
     const cargo = await readFile(cargoPath, 'utf8');
     const cargoLock = await readFile(lockPath, 'utf8');
     const packageSection = /(\[package\][\s\S]*?\nversion = ")([^"]+)(")/;
-    if (cargo.match(packageSection)?.[2] !== config.version) throw new Error('Cargo and Tauri source versions must match before release.');
+    const lockSection = /(\[\[package\]\]\r?\nname = "(?:stp-environment-desk|aws-environment-desk)"\r?\nversion = ")([^"]+)(")/;
     let published = config.version;
     try {
       const metadata = join(channel, 'latest.json');
@@ -115,12 +115,6 @@ export async function release(platform, {
     }
     const version = environment.DESK_RELEASE_VERSION || nextVersion(config.version, published);
     versionParts(version);
-    if (environment.DESK_RELEASE_VERSION && (nextVersion(version, config.version) !== nextVersion(version)
-      || (published !== config.version && nextVersion(version, published) !== nextVersion(version)))) {
-      throw new Error('The explicit release version cannot be older than source or channel versions.');
-    }
-    const lockSection = /(\[\[package\]\]\r?\nname = "(?:stp-environment-desk|aws-environment-desk)"\r?\nversion = ")([^"]+)(")/;
-    if (cargoLock.match(lockSection)?.[2] !== config.version) throw new Error('Cargo.lock source version must match Tauri.');
 
     staging = await mkdtemp(join(tmpdir(), 'stp-release-check-'));
     // Fail on a missing password or unusable private key before modifying source versions.

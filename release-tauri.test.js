@@ -38,8 +38,8 @@ test('release versions advance beyond source and channel versions', () => {
   }
 });
 
-/** Tag-driven CI builds use the exact version, while local releases continue to increment automatically. */
-test('CI release version overrides automatic increment without accepting an older version', async context => {
+/** Tag-driven CI builds use the exact version specified without requiring source file synchronization. */
+test('CI release version overrides automatic increment and updates source versions', async context => {
   const data = await fixture(context);
   const environment = { ...data.environment, DESK_RELEASE_VERSION: '1.4.0' };
   const result = await release('windows', {
@@ -53,11 +53,21 @@ test('CI release version overrides automatic increment without accepting an olde
     },
   });
   assert.equal(result.version, '1.4.0');
-  await assert.rejects(release('windows', {
-    ...data, host: 'win32', environment: { ...environment, DESK_RELEASE_VERSION: '1.3.9' },
-    run: () => {},
-  }), /cannot be older/);
   assert.equal(JSON.parse(await readFile(join(data.root, 'src-tauri', 'tauri.conf.json'), 'utf8')).version, '1.4.0');
+
+  // Verify that an explicit release version different from source files (e.g. 1.0.0) is also applied cleanly
+  const result2 = await release('windows', {
+    ...data, host: 'win32', environment: { ...data.environment, DESK_RELEASE_VERSION: '1.0.0' },
+    run: async (command, args) => {
+      if (args[1] === 'bundle') {
+        const bundle = join(environment.CARGO_TARGET_DIR, 'release', 'bundle', 'nsis');
+        await mkdir(bundle, { recursive: true });
+        await writeFile(join(bundle, 'AWS Environment Desk_1.0.0_x64-setup.exe'), 'Fixture only');
+      }
+    },
+  });
+  assert.equal(result2.version, '1.0.0');
+  assert.equal(JSON.parse(await readFile(join(data.root, 'src-tauri', 'tauri.conf.json'), 'utf8')).version, '1.0.0');
 });
 
 for (const platform of ['windows', 'macos']) {
